@@ -843,3 +843,31 @@ drop cascades to elabel ag_edge
 drop cascades to vlabel person
 drop cascades to vlabel movie
 drop cascades to elabel acted_in
+
+
+--
+-- Testing labels() function for vertices and edges
+--
+-- Create a new graph
+CREATE GRAPH labels_test_graph;
+SET graph_path = labels_test_graph;
+CREATE (a:Actor {name: 'Leonardo DiCaprio'}),
+       (m:Movie {title: 'Inception'}),
+       (a)-[:ACTED_IN]->(m);
+       
+-- Test labels() on vertices
+MATCH (a:Actor), (m:Movie)
+RETURN a, labels(a), m, labels(m);
+            a               |  labels   |             m              |  labels  
+----------------------------+-----------+-----------------------------+----------
+ actor[3.1]{"name":"Leonardo DiCaprio"} | ["actor"] | movie[3.2]{"title":"Inception"} | ["movie"]
+(1 row)
+
+-- Clean up
+DROP GRAPH labels_test_graph CASCADE;
+drop cascades to vlabel ag_vertex
+drop cascades to elabel ag_edge
+drop cascades to vlabel actor
+drop cascades to elabel acted_in
+drop cascades to vlabel movie
+

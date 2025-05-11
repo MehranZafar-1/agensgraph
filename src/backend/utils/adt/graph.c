@@ -1555,15 +1555,54 @@ gin_compare_partial_graphid(FunctionCallInfo fcinfo)
 	PG_RETURN_INT32(res);
 }
 
-Datum
-graph_exists(PG_FUNCTION_ARGS)
+Datum labels(PG_FUNCTION_ARGS)
 {
-	text	*graphName_text = PG_GETARG_TEXT_PP(0);
-	char	*graphName;
-	Oid		gOID ;
-
-	graphName = text_to_cstring(graphName_text);
-	gOID = get_graphname_oid(graphName);
-
-	PG_RETURN_BOOL(OidIsValid(gOID));
+    HeapTupleHeader tuple;
+    Oid tup_type;
+    int32 tup_typmod;
+    TupleDesc tup_desc;
+    int label_attnum = -1;
+    int i;
+    
+    /* Get the HeapTupleHeader from the function argument */
+    tuple = PG_GETARG_HEAPTUPLEHEADER(0);
+    
+    /* Get type info from the tuple */
+    tup_type = HeapTupleHeaderGetTypeId(tuple);
+    tup_typmod = HeapTupleHeaderGetTypMod(tuple);
+    tup_desc = lookup_rowtype_tupdesc(tup_type, tup_typmod);
+    
+    /* Find the 'label' attribute in the tuple */
+    for (i = 0; i < tup_desc->natts; i++)
+    {
+        Form_pg_attribute attr = TupleDescAttr(tup_desc, i);
+        if (!attr->attisdropped && strcmp(NameStr(attr->attname), "label") == 0)
+        {
+            label_attnum = i + 1;
+            break;
+        }
+    }
+    
+    if (label_attnum != -1)
+    {
+        Datum label_datum;
+        text *label;
+        Datum values[1];
+        ArrayType *result_array;
+        
+        /* Get the label attribute value */
+        label_datum = GetAttributeByNum(tuple, label_attnum, tup_desc, &(bool){false});
+        label = DatumGetTextPP(label_datum);
+        
+        /* Create an array with the label */
+        values[0] = PointerGetDatum(label);
+        result_array = construct_array(values, 1, TEXTOID, -1, false, TYPALIGN_INT);
+        
+        ReleaseTupleDesc(tup_desc);
+        PG_RETURN_ARRAYTYPE_P(result_array);
+    }
+    
+    ReleaseTupleDesc(tup_desc);
+    ereport(ERROR,
+            (errmsg("no 'label' attribute found in vertex")));
 }

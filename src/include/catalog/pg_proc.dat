@@ -12438,5 +12438,7 @@
   proname => 'collect', prokind => 'a', proisstrict => 'f',
   provolatile => 's', prorettype => 'jsonb', proargtypes => 'anyelement',
   prosrc => 'aggregate_dummy' },
-
+{ oid => '8037', descr => 'Returns the labels corresponding to graph entities',
+  proname => 'labels', prorettype => '_text', proargtypes => 'anyelement',
+  prosrc => 'labels' },
 ]

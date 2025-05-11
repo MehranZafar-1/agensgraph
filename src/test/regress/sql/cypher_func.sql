@@ -399,3 +399,20 @@ MATCH (n1)-[e1]->(n2) return id(n1),id(e1),id(n2),start_id(e1),end_id(e1);
 
 -- Clean up
 DROP GRAPH edge_test_graph CASCADE;
+
+--
+-- Testing labels() function for vertices and edges
+--
+-- Create a new graph
+CREATE GRAPH labels_test_graph;
+SET graph_path = labels_test_graph;
+CREATE (a:Actor {name: 'Leonardo DiCaprio'}),
+       (m:Movie {title: 'Inception'}),
+       (a)-[:ACTED_IN]->(m);
+       
+-- Test labels() on vertices
+MATCH (a:Actor), (m:Movie)
+RETURN a, labels(a), m, labels(m);
+
+-- Clean up
+DROP GRAPH labels_test_graph CASCADE;
